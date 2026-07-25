@@ -1,0 +1,44 @@
+{
+  "name": "ai-farmer-backend",
+  "version": "1.0.0",
+  "description": "AI Farmer Disease Predictor - Node/Express API",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "seed": "node src/seed/seed.js",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongoose": "^8.5.1",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.4.0",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-validator": "^7.2.0",
+    "form-data": "^4.0.0",
+    "multer": "^2.0.0",
+    "cloudinary": "^2.4.0",
+    "socket.io": "^4.7.5",
+    "nodemailer": "^9.0.3",
+    "axios": "^1.7.4",
+    "morgan": "^1.10.0",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "pdfkit": "^0.15.0",
+    "qrcode": "^1.5.4",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4",
+    "jest": "^29.7.0",
+    "mongodb-memory-server": "^10.0.0",
+    "supertest": "^7.0.0"
+  }
+}

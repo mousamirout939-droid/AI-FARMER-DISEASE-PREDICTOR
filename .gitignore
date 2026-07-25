@@ -1,0 +1,36 @@
+# Node
+node_modules/
+npm-debug.log*
+package-lock.json.bak
+dist/
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Env
+.env
+.env.local
+*.env.production
+
+# AI model artifacts
+ai-service/checkpoints/*.pt
+ai-service/checkpoints/*.onnx
+ai-service/dataset/raw/train/**/*.jpg
+ai-service/dataset/raw/train/**/*.png
+ai-service/dataset/raw/val/**/*.jpg
+ai-service/dataset/raw/val/**/*.png
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+*.log
+
+# Testing
+coverage/
+.pytest_cache/

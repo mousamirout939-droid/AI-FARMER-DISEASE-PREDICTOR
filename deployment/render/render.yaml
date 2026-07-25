@@ -1,0 +1,32 @@
+# Render deployment blueprint. See https://render.com/docs/blueprint-spec
+# Deploy with: connect this repo in the Render dashboard and select "Blueprint".
+services:
+  - type: web
+    name: ai-farmer-backend
+    runtime: node
+    rootDir: backend
+    plan: starter
+    buildCommand: npm install
+    startCommand: node src/server.js
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: CLIENT_URL
+        sync: false
+      - key: AI_SERVICE_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

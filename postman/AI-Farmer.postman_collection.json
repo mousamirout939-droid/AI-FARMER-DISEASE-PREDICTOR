@@ -1,0 +1,180 @@
+{
+  "info": {
+    "name": "AI Farmer Disease Predictor API",
+    "description": "REST API collection for the AI Farmer Disease Predictor backend (Node/Express) and AI microservice (FastAPI).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:5000/api/v1" },
+    { "key": "aiServiceUrl", "value": "http://localhost:8000/api/v1" },
+    { "key": "accessToken", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Register",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"name\": \"Demo Farmer\",\n  \"email\": \"farmer@aifarmer.app\",\n  \"password\": \"Farmer@12345\",\n  \"role\": \"farmer\"\n}" },
+            "url": "{{baseUrl}}/auth/register"
+          }
+        },
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"farmer@aifarmer.app\",\n  \"password\": \"Farmer@12345\"\n}" },
+            "url": "{{baseUrl}}/auth/login"
+          }
+        },
+        {
+          "name": "Get current user",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/auth/me"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Predictions",
+      "item": [
+        {
+          "name": "Create prediction (upload image)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "body": {
+              "mode": "formdata",
+              "formdata": [{ "key": "image", "type": "file", "src": "" }]
+            },
+            "url": "{{baseUrl}}/predictions"
+          }
+        },
+        {
+          "name": "My prediction history",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/predictions?page=1&limit=20"
+          }
+        },
+        {
+          "name": "Get prediction by ID",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/predictions/:id"
+          }
+        },
+        {
+          "name": "Download PDF report",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/predictions/:id/report"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Diseases",
+      "item": [
+        { "name": "List diseases", "request": { "method": "GET", "url": "{{baseUrl}}/diseases" } },
+        { "name": "Get disease by ID", "request": { "method": "GET", "url": "{{baseUrl}}/diseases/:id" } }
+      ]
+    },
+    {
+      "name": "Weather",
+      "item": [
+        {
+          "name": "Get weather",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/weather?location=Bengaluru"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Market",
+      "item": [
+        {
+          "name": "Market prices",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/market/prices"
+          }
+        },
+        {
+          "name": "Government schemes",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/market/schemes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Chatbot",
+      "item": [
+        {
+          "name": "Chat",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{accessToken}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": { "mode": "raw", "raw": "{\n  \"message\": \"How do I treat tomato early blight?\"\n}" },
+            "url": "{{baseUrl}}/chatbot"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Admin",
+      "item": [
+        {
+          "name": "Dashboard stats",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/stats"
+          }
+        },
+        {
+          "name": "List users",
+          "request": {
+            "method": "GET",
+            "header": [{ "key": "Authorization", "value": "Bearer {{accessToken}}" }],
+            "url": "{{baseUrl}}/admin/users"
+          }
+        }
+      ]
+    },
+    {
+      "name": "AI Service (FastAPI, direct)",
+      "item": [
+        { "name": "Health", "request": { "method": "GET", "url": "{{aiServiceUrl}}/health" } },
+        { "name": "Supported classes", "request": { "method": "GET", "url": "{{aiServiceUrl}}/classes" } },
+        {
+          "name": "Predict (upload image)",
+          "request": {
+            "method": "POST",
+            "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "" }] },
+            "url": "{{aiServiceUrl}}/predict"
+          }
+        }
+      ]
+    }
+  ]
+}
