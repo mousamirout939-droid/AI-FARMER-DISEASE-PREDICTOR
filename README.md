@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🌾 AI Farmer Disease Predictor
 
 **AI Powered Smart Farming Assistant** — photograph a crop leaf, get an instant AI diagnosis
@@ -104,3 +105,6 @@ PyTorch · OpenCV · Docker · GitHub Actions
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
+=======
+# AI-FARMER-DISEASE-PREDICTOR
+>>>>>>> fa7380825acba1dfb0ae46ee4dac48c80e1cc2df
