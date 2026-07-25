@@ -33,7 +33,7 @@ export const register = asyncHandler(async (req, res) => {
     email,
     password,
     phone,
-    role: ['farmer', 'expert'].includes(role) ? role : 'farmer',
+    role: ['farmer', 'expert','admin'].includes(role) ? role : 'farmer',
   });
 
   const payload = await buildAuthResponse(res, user);
