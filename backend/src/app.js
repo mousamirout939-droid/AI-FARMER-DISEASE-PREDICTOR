@@ -30,22 +30,62 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(helmet());
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://ai-farmer-disease-predictor.vercel.app',
+];
+
 app.use(
   cors({
-    origin: env.CLIENT_URL,
+    origin(origin, callback) {
+      // Allow requests with no origin (Postman, curl, mobile apps)
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      // Local development
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      // Allow all Vercel deployments
+      if (
+        origin.startsWith('https://') &&
+        origin.endsWith('.vercel.app')
+      ) {
+        return callback(null, true);
+      }
+
+      console.error(`CORS blocked: ${origin}`);
+      return callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+    ],
   })
 );
+
 app.use(compression());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(mongoSanitize());
 app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
+
 app.use('/api', apiLimiter);
 
 app.get('/health', (req, res) => {
-  res.json({ success: true, message: 'AI Farmer API is healthy', env: env.NODE_ENV, timestamp: new Date() });
+  res.json({
+    success: true,
+    message: 'AI Farmer API is healthy',
+    env: env.NODE_ENV,
+    timestamp: new Date(),
+  });
 });
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
