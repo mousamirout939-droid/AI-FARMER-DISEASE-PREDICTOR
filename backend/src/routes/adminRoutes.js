@@ -8,5 +8,6 @@ router.get('/stats', ctrl.getDashboardStats);
 router.get('/users', ctrl.listUsers);
 router.patch('/users/:id/status', ctrl.updateUserStatus);
 router.patch('/users/:id/verify-expert', ctrl.verifyExpert);
+router.patch('/users/:id/promote-admin', ctrl.promoteToAdmin);
 router.get('/community', ctrl.listCommunityPostsAdmin);
 export default router;

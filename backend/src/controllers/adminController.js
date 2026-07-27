@@ -3,8 +3,10 @@ import Prediction from '../models/Prediction.js';
 import Disease from '../models/Disease.js';
 import CommunityPost from '../models/Community.js';
 import SupportTicket from '../models/SupportTicket.js';
-import { asyncHandler } from '../middleware/errorHandler.js';
+import { ApiError, asyncHandler } from '../middleware/errorHandler.js';
 import { success } from '../utils/apiResponse.js';
+
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 export const getDashboardStats = asyncHandler(async (req, res) => {
   const [totalFarmers, totalExperts, totalPredictions, totalDiseases, openTickets, recentPredictions] =
@@ -50,7 +52,10 @@ export const listUsers = asyncHandler(async (req, res) => {
   const { role, search, page = 1, limit = 20 } = req.query;
   const filter = {};
   if (role) filter.role = role;
-  if (search) filter.$or = [{ name: new RegExp(search, 'i') }, { email: new RegExp(search, 'i') }];
+  if (search) {
+    const safe = escapeRegex(search);
+    filter.$or = [{ name: new RegExp(safe, 'i') }, { email: new RegExp(safe, 'i') }];
+  }
 
   const users = await User.find(filter)
     .sort({ createdAt: -1 })
@@ -61,7 +66,12 @@ export const listUsers = asyncHandler(async (req, res) => {
 });
 
 export const updateUserStatus = asyncHandler(async (req, res) => {
+  if (String(req.params.id) === String(req.user._id)) {
+    throw new ApiError(400, "You can't change your own account status");
+  }
+
   const user = await User.findByIdAndUpdate(req.params.id, { isActive: req.body.isActive }, { new: true });
+  if (!user) throw new ApiError(404, 'User not found');
   success(res, 200, 'User status updated', user);
 });
 
@@ -71,7 +81,21 @@ export const verifyExpert = asyncHandler(async (req, res) => {
     { 'expertDetails.verified': true },
     { new: true }
   );
+  if (!user) throw new ApiError(404, 'User not found');
   success(res, 200, 'Expert verified', user);
+});
+
+export const promoteToAdmin = asyncHandler(async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) throw new ApiError(404, 'User not found');
+
+  if (user.role === 'admin') {
+    return success(res, 200, 'User is already an admin', user.toSafeObject());
+  }
+
+  user.role = 'admin';
+  await user.save();
+  success(res, 200, 'User promoted to admin', user.toSafeObject());
 });
 
 export const listCommunityPostsAdmin = asyncHandler(async (req, res) => {

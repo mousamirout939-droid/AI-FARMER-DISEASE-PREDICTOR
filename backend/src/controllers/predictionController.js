@@ -1,7 +1,6 @@
 import axios from 'axios';
 import Prediction from '../models/Prediction.js';
 import Disease from '../models/Disease.js';
-import Weather from '../models/Weather.js';
 import { ApiError, asyncHandler } from '../middleware/errorHandler.js';
 import { success } from '../utils/apiResponse.js';
 import { uploadBuffer } from '../config/cloudinary.js';
@@ -43,41 +42,38 @@ export const createPrediction = asyncHandler(async (req, res) => {
     throw new ApiError(502, 'Image upload failed', err.message);
   }
 
-  const disease = await Disease.findOne({ classLabel: aiResult.predicted_class });
+  const disease = await Disease.findOne({
+  classLabel: aiResult.predicted_class,
+}).catch(() => null);
 
-  const prediction = await Prediction.create({
-    user: req.user._id,
-    imageUrl: uploaded.secure_url,
-    imagePublicId: uploaded.public_id,
-    crop: aiResult.crop || 'unknown',
-    predictedClass: aiResult.predicted_class,
-    disease: disease?._id,
-    confidence: aiResult.confidence,
-    severityScore: aiResult.severity_score || 0,
-    boundingBoxes: aiResult.bounding_boxes || [],
-    heatmapUrl: aiResult.heatmap_url || '',
-    allProbabilities: aiResult.all_probabilities || [],
-  });
+ const prediction = await Prediction.create({
+  user: req.user._id,
+  imageUrl: uploaded?.secure_url || '',
+  imagePublicId: uploaded?.public_id || '',
+  crop: aiResult?.crop || 'Unknown',
+  predictedClass: aiResult?.predicted_class || 'Unknown',
+  disease: disease?._id || null,
+  confidence: aiResult?.confidence || 0,
+  severityScore: aiResult?.severity_score || 0,
+  boundingBoxes: aiResult?.bounding_boxes || [],
+  heatmapUrl: aiResult?.heatmap_url || '',
+  allProbabilities: aiResult?.all_probabilities || [],
+});
 
-  await prediction.populate('disease');
-  success(res, 201, 'Prediction complete', prediction);
+ await prediction.populate('disease').catch(() => {});
+return success(res, 201, 'Prediction complete', prediction);
 });
 
 export const getMyPredictions = asyncHandler(async (req, res) => {
-  const page = parseInt(req.query.page, 10) || 1;
-  const limit = parseInt(req.query.limit, 10) || 20;
+  const predictions = await Prediction.find({
+    user: req.user._id,
+  })
+    .populate('disease')
+    .sort({ createdAt: -1 });
 
-  const [items, total] = await Promise.all([
-    Prediction.find({ user: req.user._id })
-      .populate('disease')
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit),
-    Prediction.countDocuments({ user: req.user._id }),
-  ]);
-
-  success(res, 200, 'Prediction history fetched', items, { page, limit, total });
+  return success(res, 200, 'Prediction history fetched', predictions);
 });
+  
 
 export const getPredictionById = asyncHandler(async (req, res) => {
   const prediction = await Prediction.findById(req.params.id).populate('disease').populate('user', 'name email');
@@ -86,7 +82,7 @@ export const getPredictionById = asyncHandler(async (req, res) => {
   if (String(prediction.user._id) !== String(req.user._id) && req.user.role === 'farmer') {
     throw new ApiError(403, 'Not authorized to view this prediction');
   }
-  success(res, 200, 'Prediction fetched', prediction);
+  return success(res, 200, 'Prediction fetched', prediction);
 });
 
 export const generateReport = asyncHandler(async (req, res) => {
@@ -121,5 +117,5 @@ export const deletePrediction = asyncHandler(async (req, res) => {
     throw new ApiError(403, 'Not authorized to delete this prediction');
   }
   await prediction.deleteOne();
-  success(res, 200, 'Prediction deleted');
-});
+  return success(res, 200, 'Prediction deleted');
+}); 
