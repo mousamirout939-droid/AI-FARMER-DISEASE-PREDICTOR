@@ -118,6 +118,7 @@ export const requestOtp = asyncHandler(async (req, res) => {
   user.otp = {
     code: otp,
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+    attempts: 0,
   };
 
   await user.save();
@@ -135,19 +136,34 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   const { email, otp } = req.body;
 
   const user = await User.findOne({ email }).select(
-    '+otp.code +otp.expiresAt'
+    '+otp.code +otp.expiresAt +otp.attempts'
   );
 
   if (!user || !user.otp?.code) {
     throw new ApiError(400, 'No OTP requested for this account');
   }
 
-  if (user.otp.code !== otp) {
-    throw new ApiError(400, 'Invalid OTP');
-  }
-
   if (user.otp.expiresAt < new Date()) {
     throw new ApiError(400, 'OTP has expired');
+  }
+
+  if ((user.otp.attempts || 0) >= 5) {
+    user.otp = undefined;
+    await user.save();
+    throw new ApiError(429, 'Too many incorrect attempts. Please request a new OTP');
+  }
+
+  const providedOtp = String(otp || '');
+  const storedOtp = String(user.otp.code);
+
+  const buffersMatch =
+    providedOtp.length === storedOtp.length &&
+    crypto.timingSafeEqual(Buffer.from(providedOtp), Buffer.from(storedOtp));
+
+  if (!buffersMatch) {
+    user.otp.attempts = (user.otp.attempts || 0) + 1;
+    await user.save();
+    throw new ApiError(400, 'Invalid OTP');
   }
 
   user.otp = undefined;
@@ -201,7 +217,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
     passwordResetExpires: {
       $gt: new Date(),
     },
-  }).select('+passwordResetToken +passwordResetExpires');
+  }).select('+passwordResetToken +passwordResetExpires +refreshTokens');
 
   if (!user) {
     throw new ApiError(400, 'Invalid or expired reset token');
@@ -210,6 +226,8 @@ export const resetPassword = asyncHandler(async (req, res) => {
   user.password = password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
+  // Invalidate all existing sessions on password reset
+  user.refreshTokens = [];
 
   await user.save();
 
@@ -238,21 +256,53 @@ export const refreshToken = asyncHandler(async (req, res) => {
   }
 
   const accessToken = signAccessToken(user._id, user.role);
+  const newRefreshToken = signRefreshToken(user._id);
+
+  // Rotate: remove the used token, add the new one
+  user.refreshTokens = [
+    ...user.refreshTokens.filter((t) => t !== token),
+    newRefreshToken,
+  ].slice(-5);
+
+  await user.save();
+
+  res.cookie('accessToken', accessToken, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 15 * 60 * 1000,
+  });
+
+  res.cookie('refreshToken', newRefreshToken, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
 
   success(res, 200, 'Token refreshed', {
     accessToken,
+    refreshToken: newRefreshToken,
   });
 });
 
 export const logout = asyncHandler(async (req, res) => {
   const token = req.body.refreshToken || req.cookies?.refreshToken;
 
-  if (token && req.user) {
-    req.user.refreshTokens = (req.user.refreshTokens || []).filter(
-      (t) => t !== token
-    );
+  if (token) {
+    let decoded;
 
-    await req.user.save();
+    try {
+      decoded = verifyRefreshToken(token);
+    } catch {
+      decoded = null;
+    }
+
+    if (decoded?.id) {
+      await User.findByIdAndUpdate(decoded.id, {
+        $pull: { refreshTokens: token },
+      });
+    }
   }
 
   res.clearCookie('accessToken');
