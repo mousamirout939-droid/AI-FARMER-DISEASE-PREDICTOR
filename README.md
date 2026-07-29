@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # 🌾 AI Farmer Disease Predictor
 
 **AI Powered Smart Farming Assistant** — photograph a crop leaf, get an instant AI diagnosis
@@ -13,19 +12,187 @@ government scheme lookup, and a farmer community — all in one platform.
 > what's real vs. what you need to plug in.
 
 ## Architecture
-
-```
-┌─────────────────┐      ┌──────────────────┐      ┌───────────────────┐
-│  React Frontend │─────▶│  Node/Express API │─────▶│  FastAPI AI Service│
-│  (Vite, Tailwind)│      │  (JWT, MongoDB)   │      │  (PyTorch, OpenCV) │
-└─────────────────┘      └──────────────────┘      └───────────────────┘
-                                   │
-                                   ▼
-                          ┌──────────────────┐
-                          │  MongoDB Atlas    │
-                          └──────────────────┘
-```
-
+ai-farmer-disease-predictor/
+│
+├── frontend/                          # React 19 + Vite + TailwindCSS
+│   ├── public/
+│   │   ├── favicon.ico
+│   │   ├── manifest.json              # PWA manifest
+│   │   └── robots.txt
+│   ├── src/
+│   │   ├── assets/                    # images, icons, illustrations
+│   │   ├── components/
+│   │   │   ├── common/                # Button, Modal, Loader, Card, etc.
+│   │   │   ├── layout/                # Navbar, Sidebar, Footer
+│   │   │   ├── dashboard/             # Farmer/Expert/Admin dashboard widgets
+│   │   │   ├── upload/                # Image upload + camera capture
+│   │   │   ├── diagnosis/             # Result cards, confidence bars, GradCAM viewer
+│   │   │   ├── weather/               # Weather widget, risk alerts
+│   │   │   ├── market/                # Market price cards/charts
+│   │   │   ├── community/             # Feed, post card, comments
+│   │   │   └── chat/                  # Socket.io chat UI
+│   │   ├── pages/
+│   │   │   ├── Home.jsx
+│   │   │   ├── Login.jsx
+│   │   │   ├── Register.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Diagnose.jsx
+│   │   │   ├── History.jsx
+│   │   │   ├── Community.jsx
+│   │   │   ├── Appointments.jsx
+│   │   │   ├── Schemes.jsx
+│   │   │   ├── Profile.jsx
+│   │   │   └── admin/
+│   │   │       ├── AdminDashboard.jsx
+│   │   │       ├── UserManagement.jsx
+│   │   │       └── Analytics.jsx
+│   │   ├── redux/
+│   │   │   ├── store.js
+│   │   │   └── slices/
+│   │   │       ├── authSlice.js
+│   │   │       ├── diagnosisSlice.js
+│   │   │       ├── uiSlice.js
+│   │   │       └── notificationSlice.js
+│   │   ├── services/                  # React Query hooks + Axios API calls
+│   │   │   ├── api.js                 # Axios instance + interceptors
+│   │   │   ├── authService.js
+│   │   │   ├── diagnosisService.js
+│   │   │   ├── weatherService.js
+│   │   │   └── marketService.js
+│   │   ├── hooks/                     # custom hooks (useAuth, useSocket, etc.)
+│   │   ├── routes/
+│   │   │   ├── AppRoutes.jsx
+│   │   │   └── ProtectedRoute.jsx
+│   │   ├── utils/                     # helpers, formatters, constants
+│   │   ├── context/                   # ThemeContext (dark/light mode)
+│   │   ├── App.jsx
+│   │   ├── main.jsx
+│   │   └── index.css                  # Tailwind directives
+│   ├── .env.example
+│   ├── index.html
+│   ├── package.json
+│   ├── tailwind.config.js
+│   ├── vite.config.js
+│   └── vite-plugin-pwa.config.js
+│
+├── backend/                           # Node.js + Express + MongoDB
+│   ├── src/
+│   │   ├── config/
+│   │   │   ├── db.js                  # MongoDB connection
+│   │   │   ├── cloudinary.js
+│   │   │   ├── passport.js            # Google OAuth strategy
+│   │   │   └── swagger.js
+│   │   ├── models/
+│   │   │   ├── User.js
+│   │   │   ├── Diagnosis.js
+│   │   │   ├── CommunityPost.js
+│   │   │   ├── Appointment.js
+│   │   │   ├── SupportTicket.js
+│   │   │   ├── Notification.js
+│   │   │   └── Scheme.js
+│   │   ├── controllers/
+│   │   │   ├── authController.js
+│   │   │   ├── userController.js
+│   │   │   ├── diagnosisController.js
+│   │   │   ├── communityController.js
+│   │   │   ├── appointmentController.js
+│   │   │   ├── weatherController.js
+│   │   │   ├── marketController.js
+│   │   │   ├── schemeController.js
+│   │   │   └── adminController.js
+│   │   ├── routes/
+│   │   │   ├── authRoutes.js
+│   │   │   ├── userRoutes.js
+│   │   │   ├── diagnosisRoutes.js
+│   │   │   ├── communityRoutes.js
+│   │   │   ├── appointmentRoutes.js
+│   │   │   ├── weatherRoutes.js
+│   │   │   ├── marketRoutes.js
+│   │   │   ├── schemeRoutes.js
+│   │   │   └── adminRoutes.js
+│   │   ├── middlewares/
+│   │   │   ├── authMiddleware.js      # JWT verify
+│   │   │   ├── roleMiddleware.js      # farmer/expert/admin
+│   │   │   ├── errorHandler.js
+│   │   │   ├── rateLimiter.js
+│   │   │   └── upload.js              # Multer + Cloudinary
+│   │   ├── services/
+│   │   │   ├── emailService.js        # SMTP / OTP mail
+│   │   │   ├── smsService.js          # OTP SMS
+│   │   │   ├── aiServiceClient.js     # calls FastAPI ai-service
+│   │   │   ├── pdfReportService.js
+│   │   │   └── qrCodeService.js
+│   │   ├── sockets/
+│   │   │   └── socketHandler.js       # Socket.io chat/notifications
+│   │   ├── utils/
+│   │   │   ├── generateTokens.js
+│   │   │   ├── otpGenerator.js
+│   │   │   └── validators.js
+│   │   ├── seed/
+│   │   │   └── seed.js                # demo users/data
+│   │   ├── app.js                     # Express app setup
+│   │   └── server.js                  # entry point
+│   ├── tests/                         # Jest tests
+│   │   ├── auth.test.js
+│   │   └── diagnosis.test.js
+│   ├── .env.example
+│   ├── package.json
+│   └── Dockerfile
+│
+├── ai-service/                        # Python 3.12 + FastAPI + PyTorch
+│   ├── app/
+│   │   ├── main.py                    # FastAPI entrypoint
+│   │   ├── api/
+│   │   │   ├── routes/
+│   │   │   │   ├── predict.py
+│   │   │   │   ├── health.py
+│   │   │   │   └── explain.py         # GradCAM endpoint
+│   │   │   └── deps.py
+│   │   ├── core/
+│   │   │   ├── config.py              # pydantic-settings
+│   │   │   └── security.py            # JWT verification (jose)
+│   │   ├── ml/
+│   │   │   ├── model.py               # MobileNetV3 architecture
+│   │   │   ├── train.py               # training pipeline
+│   │   │   ├── inference.py           # prediction logic
+│   │   │   ├── preprocess.py          # OpenCV image processing
+│   │   │   ├── gradcam.py             # explainability
+│   │   │   ├── quality_check.py       # blur/brightness checks
+│   │   │   └── export_onnx.py
+│   │   ├── schemas/
+│   │   │   ├── prediction.py          # pydantic request/response models
+│   │   │   └── health.py
+│   │   └── utils/
+│   │       └── logger.py
+│   ├── models/                        # trained model weights (.pt/.onnx) - gitignored
+│   ├── dataset/
+│   │   └── raw/
+│   │       └── README.md              # dataset structure instructions
+│   ├── tests/                         # pytest
+│   │   ├── test_predict.py
+│   │   ├── test_preprocess.py
+│   │   └── conftest.py
+│   ├── .env.example
+│   ├── requirements.txt
+│   └── Dockerfile
+│
+├── docs/
+│   ├── INSTALLATION.md
+│   ├── API_DOCUMENTATION.md
+│   ├── DEPLOYMENT.md
+│   └── MONGODB_ATLAS_SETUP.md
+│
+├── postman/
+│   └── AI-Farmer.postman_collection.json
+│
+├── .github/
+│   └── workflows/
+│       └── ci.yml                     # GitHub Actions CI pipeline
+│
+├── docker-compose.yml                 # orchestrates frontend + backend + ai-service + mongo
+├── .gitignore
+├── LICENSE
+└── README.md
 - **frontend/** — React 19 + Vite + TailwindCSS + Redux Toolkit + React Query + React Router +
   Framer Motion + Chart.js. PWA-enabled, dark/light mode, role-based dashboards (farmer/expert/admin).
 - **backend/** — Node.js + Express + MongoDB/Mongoose + JWT auth (access + refresh + OTP + Google
@@ -105,6 +272,3 @@ PyTorch · OpenCV · Docker · GitHub Actions
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
-=======
-# AI-FARMER-DISEASE-PREDICTOR
->>>>>>> fa7380825acba1dfb0ae46ee4dac48c80e1cc2df
