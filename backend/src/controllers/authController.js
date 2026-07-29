@@ -147,6 +147,7 @@ export const verifyOtp = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'OTP has expired');
   }
 
+  // Lock out after too many wrong guesses within the OTP's validity window
   if ((user.otp.attempts || 0) >= 5) {
     user.otp = undefined;
     await user.save();
@@ -156,6 +157,7 @@ export const verifyOtp = asyncHandler(async (req, res) => {
   const providedOtp = String(otp || '');
   const storedOtp = String(user.otp.code);
 
+  // Timing-safe comparison to avoid leaking info via response-time differences
   const buffersMatch =
     providedOtp.length === storedOtp.length &&
     crypto.timingSafeEqual(Buffer.from(providedOtp), Buffer.from(storedOtp));
@@ -226,6 +228,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   user.password = password;
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
+  // Invalidate all existing sessions on password reset
   user.refreshTokens = [];
 
   await user.save();
@@ -257,6 +260,7 @@ export const refreshToken = asyncHandler(async (req, res) => {
   const accessToken = signAccessToken(user._id, user.role);
   const newRefreshToken = signRefreshToken(user._id);
 
+  // Rotate: remove the used token, add the new one
   user.refreshTokens = [
     ...user.refreshTokens.filter((t) => t !== token),
     newRefreshToken,
