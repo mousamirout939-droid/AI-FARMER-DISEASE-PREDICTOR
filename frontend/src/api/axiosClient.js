@@ -6,11 +6,12 @@ const baseURL =
   import.meta.env.VITE_API_BASE_URL ||
   'http://localhost:5000/api/v1';
 
-const axiosClient = axios.create({
+export const axiosClient = axios.create({
   baseURL,
   withCredentials: true,
 });
 
+// Attach access token to every outgoing request
 axiosClient.interceptors.request.use((config) => {
   const token = store.getState().auth.accessToken;
 
@@ -36,6 +37,7 @@ const processQueue = (error, token = null) => {
   queue = [];
 };
 
+// Handle 401s by refreshing the access token once, queueing concurrent requests
 axiosClient.interceptors.response.use(
   (response) => response,
 
@@ -44,8 +46,9 @@ axiosClient.interceptors.response.use(
 
     if (
       error.response?.status === 401 &&
+      originalRequest &&
       !originalRequest._retry &&
-      !originalRequest.url.includes('/auth/')
+      !originalRequest.url?.includes('/auth/')
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -62,7 +65,11 @@ axiosClient.interceptors.response.use(
       try {
         const { data } = await axiosClient.post('/auth/refresh-token');
 
-        const newToken = data.data.accessToken;
+        const newToken = data?.data?.accessToken;
+
+        if (!newToken) {
+          throw new Error('No access token returned from refresh endpoint');
+        }
 
         store.dispatch(setAccessToken(newToken));
 
